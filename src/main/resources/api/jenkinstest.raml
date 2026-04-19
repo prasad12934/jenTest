@@ -1,0 +1,18 @@
+#%RAML 1.0
+title: jenkinsTest
+version: 1.0
+mediaType: 
+- application/json
+protocols:
+  - HTTP
+  - HTTPS
+
+/testpath:
+  post:
+    body:
+      application/json:
+    responses:
+      200:
+        body:
+          application/xml:
+            
