@@ -7,8 +7,9 @@ pipeline {
     }
 
     environment {
-        // ✅ Pulls clientId as _USR and clientSecret as _PSW from Jenkins credential
         ANYPOINT_CLIENT = credentials('anypoint-connected-app')
+        // Path where we'll write the temporary settings.xml
+        MAVEN_SETTINGS = "${WORKSPACE}\\settings.xml"
     }
 
     stages {
@@ -25,14 +26,35 @@ pipeline {
             }
         }
 
-        // ✅ Publish to Exchange FIRST — no settings.xml needed
-        // Connected App credentials passed via -Danypoint.username / -Danypoint.password
+        // ✅ Dynamically create settings.xml at runtime — no manual file needed
+        stage('Generate Maven Settings') {
+            steps {
+                script {
+                    def settingsContent = """<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              https://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <servers>
+        <server>
+            <id>anypoint-exchange-v3</id>
+            <username>~~~Client~~~${env.ANYPOINT_CLIENT_USR}</username>
+            <password>${env.ANYPOINT_CLIENT_PSW}</password>
+        </server>
+    </servers>
+</settings>"""
+                    writeFile file: 'settings.xml', text: settingsContent
+                    echo "✅ settings.xml generated at ${WORKSPACE}\\settings.xml"
+                }
+            }
+        }
+
+        // ✅ Publish to Exchange using the dynamically generated settings.xml
         stage('Publish to Exchange') {
             steps {
                 bat """
                     mvn deploy -DskipTests ^
-                    -Danypoint.username=~~~Client~~~%ANYPOINT_CLIENT_USR% ^
-                    -Danypoint.password=%ANYPOINT_CLIENT_PSW%
+                    --settings %WORKSPACE%\\settings.xml
                 """
             }
         }
@@ -53,6 +75,10 @@ pipeline {
     }
 
     post {
+        always {
+            // ✅ Clean up the generated settings.xml so secrets don't stay on disk
+            bat 'if exist "%WORKSPACE%\\settings.xml" del "%WORKSPACE%\\settings.xml"'
+        }
         success {
             echo '🚀 Deployment SUCCESS'
         }
