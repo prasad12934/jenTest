@@ -20,11 +20,11 @@ pipeline {
 
         stage('Build') {
             steps {
-                bat 'mvn clean package -DskipTests'
+                // ✅ FORCE dependency download
+                bat 'mvn clean package -U -DskipTests'
             }
         }
 
-        // ✅ STEP 1: PUBLISH TO EXCHANGE (CRITICAL)
         stage('Publish to Exchange') {
             steps {
                 bat """
@@ -36,7 +36,6 @@ pipeline {
             }
         }
 
-        // ✅ STEP 2: DEPLOY FROM EXCHANGE
         stage('Deploy to CloudHub') {
             steps {
                 bat """
@@ -52,7 +51,7 @@ pipeline {
 
     post {
         success {
-            echo '🚀 CloudHub Deployment SUCCESS'
+            echo '🚀 Deployment SUCCESS'
         }
         failure {
             echo '❌ Deployment FAILED'
