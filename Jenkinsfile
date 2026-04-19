@@ -7,6 +7,7 @@ pipeline {
     }
 
     environment {
+        // ✅ Pulls clientId as _USR and clientSecret as _PSW from Jenkins credential
         ANYPOINT_CLIENT = credentials('anypoint-connected-app')
     }
 
@@ -24,8 +25,19 @@ pipeline {
             }
         }
 
-        // ❌ REMOVED: Publish to Exchange (THIS WAS CAUSING 401)
+        // ✅ Publish to Exchange FIRST — no settings.xml needed
+        // Connected App credentials passed via -Danypoint.username / -Danypoint.password
+        stage('Publish to Exchange') {
+            steps {
+                bat """
+                    mvn deploy -DskipTests ^
+                    -Danypoint.username=~~~Client~~~%ANYPOINT_CLIENT_USR% ^
+                    -Danypoint.password=%ANYPOINT_CLIENT_PSW%
+                """
+            }
+        }
 
+        // ✅ Deploy to CloudHub 2.0
         stage('Deploy to CloudHub') {
             steps {
                 bat """
@@ -37,6 +49,7 @@ pipeline {
                 """
             }
         }
+
     }
 
     post {
