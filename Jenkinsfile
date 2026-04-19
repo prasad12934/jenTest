@@ -24,21 +24,29 @@ pipeline {
             }
         }
 
-        // ✅ Write settings.xml using bat/echo — avoids Groovy string interpolation security issue
+        // ✅ PowerShell writes the file using env vars directly
+        // PowerShell receives the real secret value from the environment
+        // even though Jenkins masks it in console output
         stage('Generate Maven Settings') {
             steps {
-                bat '''
-                    echo ^<?xml version="1.0" encoding="UTF-8"?^> > settings.xml
-                    echo ^<settings^> >> settings.xml
-                    echo   ^<servers^> >> settings.xml
-                    echo     ^<server^> >> settings.xml
-                    echo       ^<id^>anypoint-exchange-v3^</id^> >> settings.xml
-                    echo       ^<username^>~~~Client~~~%ANYPOINT_CLIENT_USR%^</username^> >> settings.xml
-                    echo       ^<password^>%ANYPOINT_CLIENT_PSW%^</password^> >> settings.xml
-                    echo     ^</server^> >> settings.xml
-                    echo   ^</servers^> >> settings.xml
-                    echo ^</settings^> >> settings.xml
-                    echo Settings file written successfully.
+                powershell '''
+                    $clientId     = $env:ANYPOINT_CLIENT_USR
+                    $clientSecret = $env:ANYPOINT_CLIENT_PSW
+
+                    $xml = @"
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+  <servers>
+    <server>
+      <id>anypoint-exchange-v3</id>
+      <username>~~~Client~~~$clientId</username>
+      <password>$clientSecret</password>
+    </server>
+  </servers>
+</settings>
+"@
+                    [System.IO.File]::WriteAllText("$env:WORKSPACE\\settings.xml", $xml, [System.Text.Encoding]::UTF8)
+                    Write-Host "settings.xml written successfully"
                 '''
             }
         }
