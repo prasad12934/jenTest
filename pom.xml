@@ -28,12 +28,6 @@
     </properties>
 
     <!-- Exchange -->
-    <distributionManagement>
-        <repository>
-            <id>anypoint-exchange</id>
-            <url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
-        </repository>
-    </distributionManagement>
 
     <build>
         <plugins>

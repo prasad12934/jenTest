@@ -20,21 +20,11 @@ pipeline {
 
         stage('Build') {
             steps {
-                // ✅ FORCE dependency download
                 bat 'mvn clean package -U -DskipTests'
             }
         }
 
-        stage('Publish to Exchange') {
-            steps {
-                bat """
-                    mvn clean deploy ^
-                    -DskipTests ^
-                    -Dconnected.app.clientId=%ANYPOINT_CLIENT_USR% ^
-                    -Dconnected.app.clientSecret=%ANYPOINT_CLIENT_PSW%
-                """
-            }
-        }
+        // ❌ REMOVED: Publish to Exchange (THIS WAS CAUSING 401)
 
         stage('Deploy to CloudHub') {
             steps {
