@@ -34,6 +34,7 @@
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.mule.tools.maven</groupId>
                 <artifactId>mule-maven-plugin</artifactId>
@@ -45,7 +46,7 @@
                         <connectedAppClientId>${connected.app.clientId}</connectedAppClientId>
                         <connectedAppClientSecret>${connected.app.clientSecret}</connectedAppClientSecret>
                         <connectedAppGrantType>client_credentials</connectedAppGrantType>
-                        <applicationName>${cloudhub.application.name}</applicationName>
+                        <applicationname>${cloudhub.application.name}</applicationname>
                         <environment>${cloudhub.environment}</environment>
                         <target>${cloudhub.target}</target>
                         <provider>MC</provider>
@@ -55,10 +56,12 @@
                     </cloudhub2Deployment>
                 </configuration>
             </plugin>
+
+            <!-- ✅ UPGRADED from 0.0.20 to 0.0.21 — fixes "Artifact could not be resolved" bug -->
             <plugin>
                 <groupId>org.mule.tools.maven</groupId>
                 <artifactId>exchange-mule-maven-plugin</artifactId>
-                <version>0.0.20</version>
+                <version>0.0.21</version>
                 <executions>
                     <execution>
                         <id>validate</id>
@@ -76,6 +79,7 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 
