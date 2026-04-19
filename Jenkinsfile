@@ -8,8 +8,6 @@ pipeline {
 
     environment {
         ANYPOINT_CLIENT = credentials('anypoint-connected-app')
-        // Path where we'll write the temporary settings.xml
-        MAVEN_SETTINGS = "${WORKSPACE}\\settings.xml"
     }
 
     stages {
@@ -26,40 +24,31 @@ pipeline {
             }
         }
 
-        // ✅ Dynamically create settings.xml at runtime — no manual file needed
+        // ✅ Write settings.xml using bat/echo — avoids Groovy string interpolation security issue
         stage('Generate Maven Settings') {
             steps {
-                script {
-                    def settingsContent = """<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
-                              https://maven.apache.org/xsd/settings-1.0.0.xsd">
-    <servers>
-        <server>
-            <id>anypoint-exchange-v3</id>
-            <username>~~~Client~~~${env.ANYPOINT_CLIENT_USR}</username>
-            <password>${env.ANYPOINT_CLIENT_PSW}</password>
-        </server>
-    </servers>
-</settings>"""
-                    writeFile file: 'settings.xml', text: settingsContent
-                    echo "✅ settings.xml generated at ${WORKSPACE}\\settings.xml"
-                }
+                bat '''
+                    echo ^<?xml version="1.0" encoding="UTF-8"?^> > settings.xml
+                    echo ^<settings^> >> settings.xml
+                    echo   ^<servers^> >> settings.xml
+                    echo     ^<server^> >> settings.xml
+                    echo       ^<id^>anypoint-exchange-v3^</id^> >> settings.xml
+                    echo       ^<username^>~~~Client~~~%ANYPOINT_CLIENT_USR%^</username^> >> settings.xml
+                    echo       ^<password^>%ANYPOINT_CLIENT_PSW%^</password^> >> settings.xml
+                    echo     ^</server^> >> settings.xml
+                    echo   ^</servers^> >> settings.xml
+                    echo ^</settings^> >> settings.xml
+                    echo Settings file written successfully.
+                '''
             }
         }
 
-        // ✅ Publish to Exchange using the dynamically generated settings.xml
         stage('Publish to Exchange') {
             steps {
-                bat """
-                    mvn deploy -DskipTests ^
-                    --settings %WORKSPACE%\\settings.xml
-                """
+                bat 'mvn deploy -DskipTests --settings %WORKSPACE%\\settings.xml'
             }
         }
 
-        // ✅ Deploy to CloudHub 2.0
         stage('Deploy to CloudHub') {
             steps {
                 bat """
@@ -76,7 +65,6 @@ pipeline {
 
     post {
         always {
-            // ✅ Clean up the generated settings.xml so secrets don't stay on disk
             bat 'if exist "%WORKSPACE%\\settings.xml" del "%WORKSPACE%\\settings.xml"'
         }
         success {
