@@ -12,36 +12,39 @@
     <name>jenkinstest</name>
 
     <properties>
-        <!-- Encoding -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <!-- Mule Runtime -->
+        <!-- Mule -->
         <app.runtime>4.6.0</app.runtime>
         <mule.maven.plugin.version>4.7.0</mule.maven.plugin.version>
 
-        <!-- CloudHub 2.0 -->
+        <!-- CloudHub -->
         <cloudhub.application.name>jenkinstest</cloudhub.application.name>
         <cloudhub.environment>Sandbox</cloudhub.environment>
-
-        <!-- ✅ FINAL FIX: Match org region -->
         <cloudhub.target>Cloudhub-US-East-2</cloudhub.target>
 
         <cloudhub.replicas>1</cloudhub.replicas>
         <cloudhub.vcores>0.1</cloudhub.vcores>
     </properties>
 
+    <!-- ✅ REQUIRED FOR EXCHANGE DEPLOY -->
+    <distributionManagement>
+        <repository>
+            <id>anypoint-exchange</id>
+            <url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
+        </repository>
+    </distributionManagement>
+
     <build>
         <plugins>
 
-            <!-- Clean Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>3.2.0</version>
             </plugin>
 
-            <!-- Mule Maven Plugin -->
+            <!-- ✅ MAIN PLUGIN -->
             <plugin>
                 <groupId>org.mule.tools.maven</groupId>
                 <artifactId>mule-maven-plugin</artifactId>
@@ -51,17 +54,20 @@
                 <configuration>
                     <cloudhub2Deployment>
 
-                        <!-- Anypoint -->
+                        <!-- ✅ CONNECTED APP AUTH -->
                         <uri>https://anypoint.mulesoft.com</uri>
-                        <username>${anypoint.username}</username>
-                        <password>${anypoint.password}</password>
 
-                        <!-- App -->
+                        <connectedAppClientId>${connected.app.clientId}</connectedAppClientId>
+                        <connectedAppClientSecret>${connected.app.clientSecret}</connectedAppClientSecret>
+
+                        <!-- REQUIRED -->
+                        <connectedAppGrantType>client_credentials</connectedAppGrantType>
+
+                        <!-- APP -->
                         <applicationName>${cloudhub.application.name}</applicationName>
                         <environment>${cloudhub.environment}</environment>
                         <target>${cloudhub.target}</target>
 
-                        <!-- REQUIRED -->
                         <provider>MC</provider>
 
                         <!-- Runtime -->
